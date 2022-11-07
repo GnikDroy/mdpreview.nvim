@@ -25,6 +25,7 @@ Install with packer
 use({
     "gnikdroy/mdpreview.nvim",
     ft = "markdown",
+    run = function() require("mdpreview").install_mlp() end,
     config = function()
         require("mdpreview").setup({
             port = 8080,

@@ -2,33 +2,31 @@ local M = {}
 local open_previews = {}
 
 local function get_python()
-    local opts = {
-        { python = "python3", pip = "pip3" },
-        { python = "python", pip = "pip" },
-    }
+    local opts = { "python3", "python" }
     for _, p in ipairs(opts) do
-        if vim.fn.executable(p.python) == 1 and vim.fn.executable(p.pip) == 1 then
+        if vim.fn.executable(p) == 1 then
             return p
         end
     end
     return nil
 end
 
-M.install_markdown_live_preview = function()
-    local py = get_python()
-    if py == nil then
-        vim.api.nvim_err_writeln("mdpreview: Python installation not found")
+M.install_mlp = function()
+    local python = get_python()
+    if python == nil then
+        vim.notify("mdpreview: Python installation not found", vim.log.levels.ERROR)
         return
     end
 
+    vim.notify("mdpreview: Downloading & Installing markdown_live_preview", vim.log.levels.INFO)
     vim.fn.jobstart(
-        { py.pip, 'install', '-U', 'markdown_live_preview' },
+        { python, '-m', 'pip', 'install', '-U', 'markdown_live_preview' },
         {
             on_exit = function(_, ret, _)
                 if ret == 0 then
-                    print("mdpreview: Installation successful")
+                    vim.notify("mdpreview: Installation successful", vim.log.levels.INFO)
                 else
-                    print("mdpreview: Installation failed")
+                    vim.notify("mdpreview: Installation failed (pip)", vim.log.levels.ERROR)
                 end
             end,
         })
@@ -45,9 +43,14 @@ local function find_suitable_port()
 end
 
 M.preview_open = function(bufnr)
+    if vim.fn.executable("mlp") <= 0 then
+        vim.notify("mdpreview: mlp not installed. Try ':lua require('mdpreview').install_mlp()'", vim.log.levels.WARN)
+        return
+    end
+
     for _, preview in ipairs(open_previews) do
         if bufnr == preview.bufnr then
-            print(string.format("mdpreview: Server active at localhost:%d", preview.port))
+            vim.notify(string.format("mdpreview: Server active at localhost:%d", preview.port), vim.log.levels.INFO)
             return
         end
     end
@@ -64,7 +67,7 @@ M.preview_open = function(bufnr)
 
     local job = vim.fn.jobstart(opts)
     if job <= 0 then return end
-    print(string.format("mdpreview: Server started at localhost:%d", port))
+    vim.notify(string.format("mdpreview: Server started at localhost:%d", port), vim.log.levels.INFO)
 
     table.insert(open_previews, {
         bufnr = bufnr,
@@ -77,8 +80,8 @@ M.preview_close = function(bufnr)
     for i = #open_previews, 1, -1 do
         if open_previews[i].bufnr == bufnr then
             vim.fn.jobstop(open_previews[i].job)
+            vim.notify(string.format("mdpreview: Preview server at localhost:%d stopped", open_previews[i].port), vim.log.levels.INFO)
             table.remove(open_previews, i)
-            print("mdpreview: Preview server stopped")
         end
     end
 end

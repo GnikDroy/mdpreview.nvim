@@ -73,6 +73,7 @@ Additionally, `:PreviewClose` is called automatically when buffer is deleted.
 use({
     "gnikdroy/mdpreview.nvim",
     ft = "markdown",
+    run = function() require("mdpreview").install_mlp() end,
     config = function()
         local mdpreview = require("mdpreview").setup({})
 

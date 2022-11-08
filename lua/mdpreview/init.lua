@@ -20,7 +20,7 @@ M.install_mlp = function()
 
     vim.notify("mdpreview: Downloading & Installing markdown_live_preview", vim.log.levels.INFO)
     vim.fn.jobstart(
-        { python, '-m', 'pip', 'install', '-U', 'markdown_live_preview' },
+        { python, '-m', 'pip', 'install', '--user', 'markdown_live_preview' },
         {
             on_exit = function(_, ret, _)
                 if ret == 0 then

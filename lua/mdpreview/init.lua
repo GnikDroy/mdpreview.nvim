@@ -43,7 +43,14 @@ local function find_suitable_port()
 end
 
 M.preview_open = function(bufnr)
-    if vim.fn.executable("mlp") <= 0 then
+    local python = get_python()
+    if python == nil then
+        vim.notify("mdpreview: Python installation not found", vim.log.levels.ERROR)
+        return
+    end
+
+    vim.fn.system({python, "-m", "markdown_live_preview", "-h"})
+    if vim.v.shell_error ~= 0 then 
         vim.notify("mdpreview: mlp not installed. Try ':lua require('mdpreview').install_mlp()'", vim.log.levels.WARN)
         return
     end
@@ -55,7 +62,7 @@ M.preview_open = function(bufnr)
         end
     end
 
-    local opts = { "mlp" }
+    local opts = { python, "-m", "markdown_live_preview"}
     if not M.config.follow then table.insert(opts, "--no-follow") end
     if not M.config.browser then table.insert(opts, "--no-browser") end
     if not M.config.localhost_only then opts:append(opts, "--open") end
